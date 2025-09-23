@@ -39,31 +39,22 @@ Tout est orchestré par **Podman Compose** (compatible Docker Compose).
 - Tout est géré par compose.yml :
 
 ```bash
+# premier démarrage
+./proxy/gen-local-ca-tls.sh
+
 podman-compose up -d
 
 # docker
 docker-compose up -d
 ```
 
+- ⚠️ Ajoutez la CA (myCA.crt) dans votre OS\/navigateur pour
+  éviter les avertissements SSL. `voir dans : ./proxy/certs/`
+
 - Puis accéder à :
   - Frontend : [`https://app.localhost:4443`](https://app.localhost:4443)
 
   - API backend : [https://api.localhost:4443](https://api.localhost:4443)
-
-## 🔧 Certificats TLS
-
-La génération automatique des certificats TLS est
-gérée directement par compose.yml lors du premier démarrage.
-
-Si vous souhaitez les régénérer manuellement,
-utilisez le script fourni dans `proxy/` :
-
-```bash
-./gen-local-ca-tls.sh
-```
-
-⚠️ Ajoutez la CA (myCA.crt) dans votre OS\/navigateur pour
-éviter les avertissements SSL.
 
 ## 🐛 Debug
 

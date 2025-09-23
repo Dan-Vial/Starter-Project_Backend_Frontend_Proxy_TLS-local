@@ -1,0 +1,10 @@
+{
+  "verbose": true,
+  "watch": [
+    "./bin/www",
+    "./routes",
+    "./app.js"
+  ],
+  "exec": "DEBUG=backend:* node ./bin/www",
+  "ext": "js"
+}

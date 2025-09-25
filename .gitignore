@@ -17,3 +17,5 @@ certs/
 
 # dotenv environment
 .env
+
+db/data/

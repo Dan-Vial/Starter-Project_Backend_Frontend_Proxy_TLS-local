@@ -11,6 +11,24 @@ Tout est orchestré par **Podman Compose** (compatible Docker Compose).
 
 ---
 
+## Prérequis
+
+- Podman ou Docker.
+- Podman-Compose ou Docker-Compose.
+
+Vous aurez besoin des dépendances suivant votre stack pour
+votre IDE afin de faire fonctionner :
+
+- L'autocomplétion.
+- Débugger.
+- Diagnostic.
+- Linter.
+- Formatage.
+- Highlighting.
+- ...
+
+---
+
 ## 📂 Arborescence
 
 ```bash
@@ -34,14 +52,13 @@ Tout est orchestré par **Podman Compose** (compatible Docker Compose).
 └── README.md
 ```
 
+---
+
 ## ⚙️ Lancement
 
 - Tout est géré par compose.yml :
 
 ```bash
-# premier démarrage
-./proxy/gen-local-ca-tls.sh
-
 podman-compose up -d
 
 # docker
@@ -56,6 +73,40 @@ docker-compose up -d
 
   - API backend : [https://api.localhost:4443](https://api.localhost:4443)
 
+---
+
+## 🔧 Certificats TLS
+
+La génération automatique des certificats TLS est
+gérée directement par compose.yml lors du premier démarrage.
+
+Si vous souhaitez les régénérer manuellement,
+utilisez le script fourni dans `proxy/` :
+
+```bash
+./gen-local-ca-tls.sh
+```
+
+### ⚠️ Pourquoi TLS même en local ?
+
+Les navigateurs modernes deviennent de plus en plus stricts sur la sécurité.
+Certaines fonctionnalités ne sont accessibles que via HTTPS :
+
+- WebAuthn (authentification biométrique ou par clé de sécurité)
+- Service Workers & PWA
+- Web Push Notifications
+- Accès aux périphériques sensibles (caméra, micro, USB, Bluetooth, etc.)
+- APIs récentes (Clipboard, Geolocation haute précision, etc.)
+- ...
+
+Sans TLS, vous seriez limités lors du développement et risqueriez des
+comportements différents entre votre environnement local et la production.
+
+👉 En important la CA locale (myCA.crt) dans votre OS/navigateur, vous pouvez
+travailler avec un environnement sécurisé et réaliste, proche de la prod.
+
+---
+
 ## 🐛 Debug
 
 Pour suivre les logs d’un service spécifique (ex: backend) :
@@ -68,4 +119,15 @@ podman-compose logs -f backend
 docker-compose logs -f backend
 ```
 
-Astuce : remplacez `backend` pour cibler un autre service.
+Vous pouvez lancer des commandes directement dans un
+service containerisé pour debug ou administration.
+
+```bash
+# Ouvrir un shell interactif dans le container "backend"
+podman-compose exec backend sh
+
+# Exécuter une commande spécifique sans ouvrir le shell
+podman-compose exec backend node app.js
+```
+
+💡 Astuce : remplacez `backend` pour cibler un autre service.

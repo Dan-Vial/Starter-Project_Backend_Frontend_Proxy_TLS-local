@@ -1,34 +1,64 @@
 services:
-  db:
-    container_name: db
-    image: docker.io/library/redis:8.2.1
+  mysql:
+    container_name: mysql
+    image: docker.io/library/mysql:9.4.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpwd
+      MYSQL_DATABASE: appdb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppwd
     expose:
-      - "6379"
+      - "3306"
     volumes:
-      - ./db:/db:z
+      - ./db/data:/var/lib/mysql:z
     stdin_open: true
     tty: true
 
-  backend:
-    container_name: backend
-    image: docker.io/library/node:24
+  composer:
+    container_name: composer
+    image: docker.io/library/composer:2.8.12
     working_dir: /backend
-    command: |
-      sh -c '
-      npm install
-      npm run dev
-      '
-    expose:
-      - "3000"
-
     volumes:
       - ./backend:/backend:z
+    stdin_open: true
+    tty: true
+    # Commande de base (sinon le container ne fait rien)
+    entrypoint: ["tail", "-f", "/dev/null"]
+
+  backend:
+    container_name: backend
+    image: docker.io/library/php:8.2-apache
+    # working_dir: /backend
+    # environment:
+    #   APACHE_DOCUMENT_ROOT: /backend/public
+    expose:
+      - "${BACKEND_PORT}"
+    depends_on:
+      - mysql
+    volumes:
+      - ./backend:/backend:z
+      - ./backend/public:/var/www/html:z
+    stdin_open: true
+    tty: true
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: docker.io/library/phpmyadmin:5.2.2-apache
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: rootpwd
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
     stdin_open: true
     tty: true
 
   frontend:
     container_name: frontend
-    image: docker.io/library/node:24
+    image: docker.io/library/node:22
     working_dir: /frontend
     command: |
       sh -c '
@@ -36,8 +66,7 @@ services:
       npm run dev -- --host
       '
     expose:
-      - "5173"
-      - "24678"
+      - "${FRONTEND_PORT}"
     volumes:
       - ./frontend:/frontend:z
     stdin_open: true
@@ -47,21 +76,21 @@ services:
     container_name: proxy
     image: docker.io/library/nginx:1.29.1
     working_dir: /proxy
-    command: [nginx-debug, "-g", "daemon off;"]
     ports:
-      - "8080:80"
-      - "4443:443"
+      - "${PROXY_PORT}:${NGINX_PORT}"
+      - "${PROXY_PORT_TLS}:443"
     environment:
-      - NGINX_HOST=localhost
-      - NGINX_PORT=80
-      - FRONTEND_PORT=5173
-      - BACKEND_PORT=3000
-      - SSL_CERT_FILE=server.crt
-      - SSL_KEY_FILE=server.key
+      #   - NGINX_HOST=${NGINX_HOST}
+      #   - NGINX_PORT=${NGINX_PORT}
+      - FRONTEND_PORT=${FRONTEND_PORT}
+      - BACKEND_PORT=${BACKEND_PORT}
+      - SSL_CERT_FILE=${SSL_CERT_FILE}
+      - SSL_KEY_FILE=${SSL_KEY_FILE}
     volumes:
       - ./proxy:/proxy:z
       - ./proxy/templates:/etc/nginx/templates:z
       - ./proxy/certs:/etc/nginx/ssl:z
       - ./proxy/logs:/var/log/nginx:z
+      - ./proxy/gen-local-ca-tls.sh:/docker-entrypoint.d/00-gen-local-ca-tls.sh:z
     stdin_open: true
     tty: true

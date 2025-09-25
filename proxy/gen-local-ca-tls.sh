@@ -3,7 +3,7 @@ set -e
 
 # Répertoire où stocker les fichiers
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CERTS_DIR="$SCRIPT_DIR/certs"
+CERTS_DIR="/etc/nginx/ssl"
 mkdir -p "$CERTS_DIR"
 
 echo "📂 Certificats stockés dans : $CERTS_DIR"
